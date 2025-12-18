@@ -21,11 +21,21 @@ namespace UpdateHalconLicense
     public partial class MainWindow : Window
     {
         private const string GITHUB_API_URL = "https://api.github.com/repos/lovelyyoshino/Halcon_licenses/contents/";
-        private const string GHPROXY_URL = "https://mirror.ghproxy.com/"; // GitHub 代理加速
+        // GitHub 代理加速
+        private readonly List<string> proxyList = new List<string>
+{
+    "https://mirror.ghproxy.com/",
+    "https://ghproxy.net/",
+    "https://gh-proxy.com/",
+    "https://ghps.cc/",
+    "https://gh.api.99988866.xyz/",
+    ""  // 直连
+};
         private readonly HttpClient httpClient;
         private DispatcherTimer autoUpdateTimer;
         private readonly string configFilePath;
         private bool useProxy = true; // 是否使用代理
+        private int currentProxyIndex = 0; // 当前使用的代理索引
 
         public MainWindow()
         {
@@ -58,7 +68,7 @@ namespace UpdateHalconLicense
             // 记录启动日志
             LogMessage("程序启动成功");
             LogMessage($"GitHub 仓库: lovelyyoshino/Halcon_licenses");
-            LogMessage($"使用加速代理: {(useProxy ? "是" : "否")}");
+            LogMessage($"可用代理节点: {proxyList.Count} 个");
         }
 
         #region 配置管理
@@ -78,7 +88,6 @@ namespace UpdateHalconLicense
                         txtDownloadPath.Text = config.DownloadPath ?? GetDefaultDownloadPath();
                         chkAutoUpdate.IsChecked = config.AutoUpdateEnabled;
                         chkUseProxy.IsChecked = config.UseProxy;
-                        useProxy = config.UseProxy;
                         cmbUpdateInterval.SelectedIndex = config.UpdateIntervalIndex;
 
                         LogMessage("配置加载成功");
@@ -113,8 +122,6 @@ namespace UpdateHalconLicense
                     UseProxy = chkUseProxy.IsChecked == true,
                     UpdateIntervalIndex = cmbUpdateInterval.SelectedIndex
                 };
-
-                useProxy = config.UseProxy; // 更新当前使用的代理设置
 
                 var directory = Path.GetDirectoryName(configFilePath);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -455,66 +462,59 @@ namespace UpdateHalconLicense
 
         private async Task DownloadSingleLicense(string url, string fileName, string monthFolder)
         {
-            const int maxRetries = 3;
-            int retryCount = 0;
+            var downloadPath = txtDownloadPath.Text;
+            if (string.IsNullOrWhiteSpace(downloadPath))
+            {
+                throw new Exception("请设置下载保存目录");
+            }
 
-            while (retryCount < maxRetries)
+            // 创建月份子目录
+            var monthPath = Path.Combine(downloadPath, monthFolder);
+            if (!Directory.Exists(monthPath))
+            {
+                Directory.CreateDirectory(monthPath);
+                LogMessage($"✓ 创建目录: {monthPath}");
+            }
+
+            var filePath = Path.Combine(monthPath, fileName);
+
+            // 遍历所有代理尝试下载
+            bool useProxy = chkUseProxy.IsChecked == true;
+            var proxiesToTry = useProxy ? proxyList : new List<string> { "" }; // 如果不使用代理，只尝试直连
+
+            foreach (var proxy in proxiesToTry)
             {
                 try
                 {
-                    var downloadPath = txtDownloadPath.Text;
-                    if (string.IsNullOrWhiteSpace(downloadPath))
-                    {
-                        throw new Exception("请设置下载保存目录");
-                    }
+                    var downloadUrl = string.IsNullOrEmpty(proxy) ? url : proxy + url;
+                    var proxyName = string.IsNullOrEmpty(proxy) ? "直连" : proxy.Replace("https://", "").TrimEnd('/');
 
-                    // 创建月份子目录
-                    var monthPath = Path.Combine(downloadPath, monthFolder);
-                    if (!Directory.Exists(monthPath))
-                    {
-                        Directory.CreateDirectory(monthPath);
-                        LogMessage($"✓ 创建目录: {monthPath}");
-                    }
+                    LogMessage($"开始下载: {fileName}");
+                    LogMessage($"  使用节点: {proxyName}");
 
-                    var filePath = Path.Combine(monthPath, fileName);
-
-                    // 使用代理URL（如果启用）
-                    var downloadUrl = useProxy ? GetProxyUrl(url) : url;
-
-                    LogMessage($"开始下载: {fileName} (尝试 {retryCount + 1}/{maxRetries})");
-                    if (useProxy && retryCount == 0)
-                    {
-                        LogMessage($"  使用加速代理下载");
-                    }
-
-                    // 下载文件并显示进度
                     var content = await DownloadWithProgress(downloadUrl, fileName);
                     await File.WriteAllBytesAsync(filePath, content);
 
                     LogMessage($"✓ 下载完成: {fileName} ({FormatFileSize(content.Length)})");
-                    return; // 成功下载，退出重试循环
+                    return; // 成功下载，退出
                 }
                 catch (Exception ex)
                 {
-                    retryCount++;
-                    LogMessage($"❌ 下载失败 (尝试 {retryCount}/{maxRetries}): {ex.Message}");
+                    var proxyName = string.IsNullOrEmpty(proxy) ? "直连" : proxy;
+                    LogMessage($"  ✗ 节点失败: {proxyName.Replace("https://", "")} - {ex.Message}");
 
-                    if (retryCount >= maxRetries)
+                    // 如果不是最后一个代理，继续尝试下一个
+                    if (proxy != proxiesToTry.Last())
                     {
-                        throw new Exception($"下载 {fileName} 失败，已重试 {maxRetries} 次");
+                        LogMessage($"  → 切换到下一个节点...");
+                        await Task.Delay(1000); // 短暂延迟
+                        continue;
                     }
-
-                    // 如果第一次使用代理失败，尝试直连
-                    if (retryCount == 1 && useProxy)
-                    {
-                        LogMessage($"  切换到直连模式重试...");
-                        useProxy = false;
-                    }
-
-                    // 等待后重试
-                    await Task.Delay(2000 * retryCount);
                 }
             }
+
+            // 所有代理都失败
+            throw new Exception($"所有下载节点均失败，无法下载 {fileName}");
         }
 
         private async Task<byte[]> DownloadWithProgress(string url, string fileName)
@@ -551,17 +551,6 @@ namespace UpdateHalconLicense
                     return memoryStream.ToArray();
                 }
             }
-        }
-
-        private string GetProxyUrl(string originalUrl)
-        {
-            // 使用 ghproxy 加速
-            if (originalUrl.Contains("raw.githubusercontent.com") ||
-                originalUrl.Contains("github.com"))
-            {
-                return GHPROXY_URL + originalUrl;
-            }
-            return originalUrl;
         }
 
         private async Task InstallLicense(bool isSilent = false)
