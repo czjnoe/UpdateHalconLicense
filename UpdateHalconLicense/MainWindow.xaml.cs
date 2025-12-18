@@ -61,6 +61,16 @@ namespace UpdateHalconLicense
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(AppConfigHelper.Appsetting.HalconPath))
+                {
+                    string halconRootValue = Environment.GetEnvironmentVariable("HALCONROOT", EnvironmentVariableTarget.Machine);
+                    if (string.IsNullOrWhiteSpace(halconRootValue))
+                        halconRootValue = Environment.GetEnvironmentVariable("HALCONROOT", EnvironmentVariableTarget.User);
+                    string licensePath = string.IsNullOrWhiteSpace(halconRootValue) ? "" : Path.Combine(halconRootValue, "license");
+                    if (Directory.Exists(licensePath))
+                        AppConfigHelper.Appsetting.HalconPath = licensePath;
+                }
+
                 txtHalconPath.Text = AppConfigHelper.Appsetting.HalconPath ?? "";
                 txtDownloadPath.Text = AppConfigHelper.Appsetting.DownloadPath;
                 chkAutoUpdate.IsChecked = AppConfigHelper.Appsetting.AutoUpdateEnabled;
