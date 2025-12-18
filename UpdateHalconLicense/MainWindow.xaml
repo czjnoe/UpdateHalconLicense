@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UpdateHalconLicense"
         mc:Ignorable="d"
-        Title="Halcon License 自动更新工具" Height="450" Width="800">
+        Title="Halcon License 自动更新工具" Height="600" Width="800">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <!-- Halcon安装目录设置 -->
-        <GroupBox Grid.Row="1" Header="Halcon 安装目录设置" Margin="0,0,0,15">
+        <GroupBox Grid.Row="0" Header="Halcon 安装目录设置" Margin="0,0,0,15">
             <StackPanel Margin="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -35,7 +35,7 @@
         </GroupBox>
 
         <!-- 下载目录设置 -->
-        <GroupBox Grid.Row="2" Header="License 下载保存目录" Margin="0,0,0,15">
+        <GroupBox Grid.Row="1" Header="License 下载保存目录" Margin="0,0,0,15">
             <StackPanel Margin="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -51,7 +51,7 @@
         </GroupBox>
 
         <!-- 自动更新设置 -->
-        <GroupBox Grid.Row="3" Header="自动更新设置" Margin="0,0,0,15">
+        <GroupBox Grid.Row="2" Header="自动更新设置" Margin="0,0,0,15">
             <StackPanel Margin="10">
                 <CheckBox x:Name="chkAutoUpdate" Content="启用自动更新 License" 
                           FontSize="14" Checked="ChkAutoUpdate_Checked" 
@@ -71,7 +71,7 @@
         </GroupBox>
 
         <!-- 操作按钮 -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,0,0,15">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,15">
             <Button x:Name="btnCheckUpdate" Content="立即检查更新" 
                     Width="120" Height="35" Margin="0,0,10,0" 
                     Click="BtnCheckUpdate_Click"/>
@@ -84,7 +84,7 @@
         </StackPanel>
 
         <!-- 日志显示区域 -->
-        <GroupBox Grid.Row="5" Header="运行日志" Margin="0,0,0,15">
+        <GroupBox Grid.Row="4" Header="运行日志" Margin="0,0,0,15">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <TextBox x:Name="txtLog" TextWrapping="Wrap" 
                          IsReadOnly="True" FontFamily="Consolas"
@@ -94,7 +94,7 @@
         </GroupBox>
 
         <!-- 状态栏 -->
-        <StatusBar Grid.Row="6" Height="30">
+        <StatusBar Grid.Row="5" Height="30">
             <StatusBarItem>
                 <TextBlock x:Name="txtStatus" Text="就绪"/>
             </StatusBarItem>

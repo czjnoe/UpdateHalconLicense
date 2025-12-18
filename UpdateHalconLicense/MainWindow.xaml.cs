@@ -21,7 +21,6 @@ namespace UpdateHalconLicense
     public partial class MainWindow : Window
     {
         private const string GITHUB_API_URL = "https://api.github.com/repos/lovelyyoshino/Halcon_licenses/contents/";
-        private const string GITHUB_RAW_URL = "https://raw.githubusercontent.com/lovelyyoshino/Halcon_licenses/master/";
         private const string GHPROXY_URL = "https://mirror.ghproxy.com/"; // GitHub 代理加速
         private readonly HttpClient httpClient;
         private DispatcherTimer autoUpdateTimer;
