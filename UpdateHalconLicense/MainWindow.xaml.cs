@@ -23,17 +23,15 @@ namespace UpdateHalconLicense
     public partial class MainWindow : Window
     {
         private const string GITHUB_API_URL = "https://api.github.com/repos/lovelyyoshino/Halcon_licenses/contents/";
-        // GitHub 代理加速
-        private readonly List<string> proxyList = new List<string>();
+        private List<string> proxyList = new List<string>();
         private readonly HttpClient httpClient;
         private DispatcherTimer autoUpdateTimer;
-        private readonly string configFilePath;
         private bool useProxy = true; // 是否使用代理
 
         public MainWindow()
         {
             InitializeComponent();
-            proxyList = AppConfigHelper.GetSetting<List<string>>("Proxys");
+
             // 初始化 HttpClient - 增加超时时间和重试机制
             var handler = new HttpClientHandler
             {
@@ -44,13 +42,6 @@ namespace UpdateHalconLicense
             httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.Add("User-Agent", "HalconLicenseUpdater");
             httpClient.Timeout = TimeSpan.FromMinutes(5); // 增加超时到5分钟
-
-            // 配置文件路径
-            configFilePath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "HalconLicenseUpdater",
-                "config.json"
-            );
 
             // 加载配置
             LoadConfig();
@@ -70,36 +61,17 @@ namespace UpdateHalconLicense
         {
             try
             {
-                if (File.Exists(configFilePath))
-                {
-                    var json = File.ReadAllText(configFilePath);
-                    var config = JsonSerializer.Deserialize<AppConfig>(json);
-
-                    if (config != null)
-                    {
-                        txtHalconPath.Text = config.HalconPath ?? "";
-                        txtDownloadPath.Text = config.DownloadPath ?? GetDefaultDownloadPath();
-                        chkAutoUpdate.IsChecked = config.AutoUpdateEnabled;
-                        chkUseProxy.IsChecked = config.UseProxy;
-                        cmbUpdateInterval.SelectedIndex = config.UpdateIntervalIndex;
-
-                        LogMessage("配置加载成功");
-                    }
-                }
-                else
-                {
-                    // 设置默认值
-                    txtDownloadPath.Text = GetDefaultDownloadPath();
-                    cmbUpdateInterval.SelectedIndex = 2; // 默认每天
-                    chkUseProxy.IsChecked = true;
-                    useProxy = true;
-                    LogMessage("使用默认配置");
-                }
+                txtHalconPath.Text = AppConfigHelper.Appsetting.HalconPath ?? "";
+                txtDownloadPath.Text = AppConfigHelper.Appsetting.DownloadPath;
+                chkAutoUpdate.IsChecked = AppConfigHelper.Appsetting.AutoUpdateEnabled;
+                chkUseProxy.IsChecked = AppConfigHelper.Appsetting.UseProxy;
+                cmbUpdateInterval.SelectedIndex = AppConfigHelper.Appsetting.UpdateIntervalIndex;
+                proxyList = AppConfigHelper.Appsetting.Proxys;
+                LogMessage("配置加载成功");
             }
             catch (Exception ex)
             {
                 LogMessage($"❌ 加载配置失败: {ex.Message}");
-                txtDownloadPath.Text = GetDefaultDownloadPath();
             }
         }
 
@@ -107,24 +79,16 @@ namespace UpdateHalconLicense
         {
             try
             {
-                var config = new AppConfig
+                var config = new Appsetting
                 {
                     HalconPath = txtHalconPath.Text,
                     DownloadPath = txtDownloadPath.Text,
                     AutoUpdateEnabled = chkAutoUpdate.IsChecked == true,
                     UseProxy = chkUseProxy.IsChecked == true,
-                    UpdateIntervalIndex = cmbUpdateInterval.SelectedIndex
+                    UpdateIntervalIndex = cmbUpdateInterval.SelectedIndex,
+                    Proxys = proxyList,
                 };
-
-                var directory = Path.GetDirectoryName(configFilePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(config, options);
-                File.WriteAllText(configFilePath, json);
+                AppConfigHelper.SaveSetting(config);
 
                 LogMessage("✓ 配置已保存");
             }
@@ -132,14 +96,6 @@ namespace UpdateHalconLicense
             {
                 LogMessage($"❌ 保存配置失败: {ex.Message}");
             }
-        }
-
-        private string GetDefaultDownloadPath()
-        {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "HalconLicenses"
-            );
         }
 
         #endregion
@@ -724,6 +680,38 @@ namespace UpdateHalconLicense
             httpClient?.Dispose();
 
             LogMessage("程序关闭");
+        }
+
+        private void BtnOpenDirectory_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $@"/root, {txtDownloadPath.Text.Trim()}",
+            };
+            System.Diagnostics.Process.Start(startInfo);
+        }
+
+        private void BtnOpenHalconDirectory_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $@"/root, {txtHalconPath.Text.Trim()}",
+            };
+            System.Diagnostics.Process.Start(startInfo);
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            GitManagerPage page = new GitManagerPage(proxyList);
+            var dialogResult = page.ShowDialog();
+            if (dialogResult == true)
+            {
+                proxyList = page.ProxyList.Select(p => p.Proxy).ToList();
+                SaveConfig();
+                LogMessage("✓ 代理节点已更新");
+            }
         }
     }
 }

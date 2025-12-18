@@ -6,98 +6,114 @@
         xmlns:local="clr-namespace:UpdateHalconLicense"
         mc:Ignorable="d"
         Title="Halcon License 自动更新工具" Height="700" Width="800">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Git" Click="MenuItem_Click">
+            </MenuItem>
+            <MenuItem Header="帮助">
+            </MenuItem>
+        </Menu>
 
-        <!-- Halcon安装目录设置 -->
-        <GroupBox Grid.Row="0" Header="Halcon 安装目录设置" Margin="0,0,0,15">
-            <StackPanel Margin="10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox x:Name="txtHalconPath" Grid.Column="0" 
-                             Padding="8" FontSize="14" Margin="0,0,10,0"/>
-                    <Button x:Name="btnBrowse" Grid.Column="1" Content="浏览..." 
-                            Width="80" Padding="5" Click="BtnBrowse_Click"/>
-                </Grid>
-                <TextBlock Text="例如: D:\Program Files\MVTec\HALCON-13.0\" 
-                           Foreground="Gray" Margin="0,5,0,0" FontSize="12"/>
-            </StackPanel>
-        </GroupBox>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- 下载目录设置 -->
-        <GroupBox Grid.Row="1" Header="License 下载保存目录" Margin="0,0,0,15">
-            <StackPanel Margin="10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox x:Name="txtDownloadPath" Grid.Column="0" 
-                             Padding="8" FontSize="14" Margin="0,0,10,0"/>
-                    <Button x:Name="btnBrowseDownload" Grid.Column="1" Content="浏览..." 
-                            Width="80" Padding="5" Click="BtnBrowseDownload_Click"/>
-                </Grid>
-            </StackPanel>
-        </GroupBox>
-
-        <!-- 自动更新设置 -->
-        <GroupBox Grid.Row="2" Header="自动更新设置" Margin="0,0,0,15">
-            <StackPanel Margin="10">
-                <CheckBox x:Name="chkAutoUpdate" Content="启用自动更新 License" 
-                          FontSize="14" Checked="ChkAutoUpdate_Checked" 
-                          Unchecked="ChkAutoUpdate_Unchecked"/>
-                <CheckBox x:Name="chkUseProxy" Content="使用 GitHub 下载加速代理 (推荐)" 
-                          FontSize="14" Margin="0,5,0,0" IsChecked="True"/>
-                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                    <TextBlock Text="检查间隔:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <ComboBox x:Name="cmbUpdateInterval" Width="150" SelectedIndex="2">
-                        <ComboBoxItem Content="每小时"/>
-                        <ComboBoxItem Content="每6小时"/>
-                        <ComboBoxItem Content="每天"/>
-                        <ComboBoxItem Content="每周"/>
-                    </ComboBox>
+            <!-- Halcon安装目录设置 -->
+            <GroupBox Grid.Row="0" Header="Halcon 安装目录设置" Margin="0,0,0,15">
+                <StackPanel Margin="10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="txtHalconPath" Grid.Column="0" 
+                            Padding="8" FontSize="14" Margin="0,0,10,0"/>
+                        <Button x:Name="btnBrowse" Grid.Column="1" Content="浏览..." 
+                           Width="80" Padding="5" Click="BtnBrowse_Click"/>
+                        <Button x:Name="btnOpenHalconDirectory" Grid.Column="2" Content="定位" 
+        Width="80" Padding="5" Click="BtnOpenHalconDirectory_Click"/>
+                    </Grid>
+                    <TextBlock Text="例如: D:\Program Files\MVTec\HALCON-13.0\" 
+                          Foreground="Gray" Margin="0,5,0,0" FontSize="12"/>
                 </StackPanel>
+            </GroupBox>
+
+            <!-- 下载目录设置 -->
+            <GroupBox Grid.Row="1" Header="License 下载保存目录" Margin="0,0,0,15">
+                <StackPanel Margin="10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="txtDownloadPath" Grid.Column="0" 
+                            Padding="8" FontSize="14" Margin="0,0,10,0"/>
+                        <Button x:Name="btnBrowseDownload" Grid.Column="1" Content="浏览..." 
+                           Width="80" Padding="5" Click="BtnBrowseDownload_Click"/>
+                        <Button x:Name="btnOpenDirectory" Grid.Column="2" Content="定位" 
+        Width="80" Padding="5" Click="BtnOpenDirectory_Click"/>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 自动更新设置 -->
+            <GroupBox Grid.Row="2" Header="自动更新设置" Margin="0,0,0,15">
+                <StackPanel Margin="10">
+                    <CheckBox x:Name="chkAutoUpdate" Content="启用自动更新 License" 
+                         FontSize="14" Checked="ChkAutoUpdate_Checked" 
+                         Unchecked="ChkAutoUpdate_Unchecked"/>
+                    <CheckBox x:Name="chkUseProxy" Content="使用 GitHub 下载加速代理 (推荐)" 
+                         FontSize="14" Margin="0,5,0,0" IsChecked="True"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="检查间隔:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox x:Name="cmbUpdateInterval" Width="150" SelectedIndex="2">
+                            <ComboBoxItem Content="每小时"/>
+                            <ComboBoxItem Content="每6小时"/>
+                            <ComboBoxItem Content="每天"/>
+                            <ComboBoxItem Content="每周"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- 操作按钮 -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,15">
+                <Button x:Name="btnCheckUpdate" Content="立即检查更新" 
+                   Width="120" Height="35" Margin="0,0,10,0" 
+                   Click="BtnCheckUpdate_Click"/>
+                <Button x:Name="btnDownload" Content="下载当月 License" 
+                   Width="140" Height="35" Margin="0,0,10,0" 
+                   Click="BtnDownload_Click"/>
+                <Button x:Name="btnInstall" Content="安装到 Halcon" 
+                   Width="120" Height="35" 
+                   Click="BtnInstall_Click"/>
             </StackPanel>
-        </GroupBox>
 
-        <!-- 操作按钮 -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,15">
-            <Button x:Name="btnCheckUpdate" Content="立即检查更新" 
-                    Width="120" Height="35" Margin="0,0,10,0" 
-                    Click="BtnCheckUpdate_Click"/>
-            <Button x:Name="btnDownload" Content="下载当月 License" 
-                    Width="140" Height="35" Margin="0,0,10,0" 
-                    Click="BtnDownload_Click"/>
-            <Button x:Name="btnInstall" Content="安装到 Halcon" 
-                    Width="120" Height="35" 
-                    Click="BtnInstall_Click"/>
-        </StackPanel>
+            <!-- 日志显示区域 -->
+            <GroupBox Grid.Row="4" Header="运行日志" Margin="0,0,0,15">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBox x:Name="txtLog" TextWrapping="Wrap" 
+                        IsReadOnly="True" FontFamily="Consolas"
+                        Background="#F5F5F5" Padding="10"
+                        VerticalScrollBarVisibility="Auto"/>
+                </ScrollViewer>
+            </GroupBox>
 
-        <!-- 日志显示区域 -->
-        <GroupBox Grid.Row="4" Header="运行日志" Margin="0,0,0,15">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <TextBox x:Name="txtLog" TextWrapping="Wrap" 
-                         IsReadOnly="True" FontFamily="Consolas"
-                         Background="#F5F5F5" Padding="10"
-                         VerticalScrollBarVisibility="Auto"/>
-            </ScrollViewer>
-        </GroupBox>
+            <!-- 状态栏 -->
+            <StatusBar Grid.Row="5" Height="30">
+                <StatusBarItem>
+                    <TextBlock x:Name="txtStatus" Text="就绪"/>
+                </StatusBarItem>
+            </StatusBar>
+        </Grid>
+    </DockPanel>
 
-        <!-- 状态栏 -->
-        <StatusBar Grid.Row="5" Height="30">
-            <StatusBarItem>
-                <TextBlock x:Name="txtStatus" Text="就绪"/>
-            </StatusBarItem>
-        </StatusBar>
-    </Grid>
 </Window>

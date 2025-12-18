@@ -15,7 +15,7 @@ namespace UpdateHalconLicense.Helper
     {
         private static IConfigurationRoot _configuration;
         private static readonly string _appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-        private static Appsetting Appsetting;
+        public static Appsetting Appsetting;
 
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
@@ -88,7 +88,21 @@ namespace UpdateHalconLicense.Helper
             }
             LoadConfiguration();// 重新加载配置
         }
+
+        public static void SaveSetting<T>(T config)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                var json = JsonSerializer.Serialize(config, options);
+                File.WriteAllText(_appSettingsPath, json);
+            }
+            catch (Exception ex)
+            {
+                // 实际应用中应记录错误
+                throw new InvalidOperationException($"更新配置失败: {ex.Message}", ex);
+            }
+            LoadConfiguration();// 重新加载配置
+        }
     }
-
-
 }
