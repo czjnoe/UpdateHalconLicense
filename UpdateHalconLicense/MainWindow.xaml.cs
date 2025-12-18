@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Threading;
+using UpdateHalconLicense.Helper;
+using UpdateHalconLicense.Models;
 
 namespace UpdateHalconLicense
 {
@@ -22,25 +24,16 @@ namespace UpdateHalconLicense
     {
         private const string GITHUB_API_URL = "https://api.github.com/repos/lovelyyoshino/Halcon_licenses/contents/";
         // GitHub 代理加速
-        private readonly List<string> proxyList = new List<string>
-{
-    "https://mirror.ghproxy.com/",
-    "https://ghproxy.net/",
-    "https://gh-proxy.com/",
-    "https://ghps.cc/",
-    "https://gh.api.99988866.xyz/",
-    ""  // 直连
-};
+        private readonly List<string> proxyList = new List<string>();
         private readonly HttpClient httpClient;
         private DispatcherTimer autoUpdateTimer;
         private readonly string configFilePath;
         private bool useProxy = true; // 是否使用代理
-        private int currentProxyIndex = 0; // 当前使用的代理索引
 
         public MainWindow()
         {
             InitializeComponent();
-
+            proxyList = AppConfigHelper.GetSetting<List<string>>("Proxys");
             // 初始化 HttpClient - 增加超时时间和重试机制
             var handler = new HttpClientHandler
             {
@@ -733,32 +726,4 @@ namespace UpdateHalconLicense
             LogMessage("程序关闭");
         }
     }
-
-    #region 数据模型
-
-    public class AppConfig
-    {
-        public string HalconPath { get; set; }
-        public string DownloadPath { get; set; }
-        public bool AutoUpdateEnabled { get; set; }
-        public bool UseProxy { get; set; } = true; // 默认启用代理
-        public int UpdateIntervalIndex { get; set; }
-    }
-
-    public class GitHubFile
-    {
-        public string name { get; set; }
-        public string download_url { get; set; }
-        public string type { get; set; }
-        public long size { get; set; }
-    }
-
-    public class LicenseFileInfo
-    {
-        public string FileName { get; set; }
-        public string Url { get; set; }
-        public long Size { get; set; }
-    }
-
-    #endregion
 }
