@@ -9,6 +9,8 @@ namespace UpdateHalconLicense.Models
 {
     public class Appsetting
     {
+        public string HalconDownloadUrl { get; set; }
+
         public List<string> Proxys { get; set; }
 
         public string HalconPath { get; set; }

@@ -81,6 +81,11 @@
                             <ComboBoxItem Content="每周"/>
                         </ComboBox>
                     </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button x:Name="btnRegisterService" Content="注册Window服务" Width="120" Margin="0,0,10,0"  Click="btnRegisterService_Click"/>
+                        <Button x:Name="btnCancleRegisterService" Content="取消注册" Width="120" Margin="0,0,10,0"  Click="btnCancleRegisterService_Click"/>
+                    </StackPanel>
                 </StackPanel>
             </GroupBox>
 

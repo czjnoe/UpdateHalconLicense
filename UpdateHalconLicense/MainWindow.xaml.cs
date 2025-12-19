@@ -22,11 +22,11 @@ namespace UpdateHalconLicense
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const string GITHUB_API_URL = "https://api.github.com/repos/lovelyyoshino/Halcon_licenses/contents/";
         private List<string> proxyList = new List<string>();
         private readonly HttpClient httpClient;
         private DispatcherTimer autoUpdateTimer;
         private bool useProxy = true; // 是否使用代理
+        private WindowsServiceManager _serviceManager;
 
         public MainWindow()
         {
@@ -53,6 +53,8 @@ namespace UpdateHalconLicense
             LogMessage("程序启动成功");
             LogMessage($"GitHub 仓库: lovelyyoshino/Halcon_licenses");
             LogMessage($"可用代理节点: {proxyList.Count} 个");
+
+            LoadRegisterServiceState();
         }
 
         #region 配置管理
@@ -370,7 +372,7 @@ namespace UpdateHalconLicense
             try
             {
                 LogMessage($"正在获取 {monthFolder} 目录内容...");
-                var apiUrl = $"{GITHUB_API_URL}{monthFolder}";
+                var apiUrl = $"{AppConfigHelper.Appsetting.HalconDownloadUrl}{monthFolder}";
 
                 var response = await httpClient.GetStringAsync(apiUrl);
                 var files = JsonSerializer.Deserialize<List<GitHubFile>>(response);
@@ -722,6 +724,30 @@ namespace UpdateHalconLicense
                 SaveConfig();
                 LogMessage("✓ 代理节点已更新");
             }
+        }
+
+        private void btnRegisterService_Click(object sender, RoutedEventArgs e)
+        {
+            var exePath = Environment.ProcessPath ??
+                                     System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var state = _serviceManager.InstallService(exePath);
+            btnRegisterService.IsEnabled = !state;
+            btnCancleRegisterService.IsEnabled = state;
+        }
+
+        private void btnCancleRegisterService_Click(object sender, RoutedEventArgs e)
+        {
+            var state = _serviceManager.UninstallService();
+            btnRegisterService.IsEnabled = state;
+            btnCancleRegisterService.IsEnabled = !state;
+        }
+
+        private void LoadRegisterServiceState()
+        {
+            _serviceManager = new WindowsServiceManager("UpdateHalconLicense.Service", "", "");
+            var state = _serviceManager.IsServiceInstalled();
+            btnRegisterService.IsEnabled = !state;
+            btnCancleRegisterService.IsEnabled = state;
         }
     }
 }
