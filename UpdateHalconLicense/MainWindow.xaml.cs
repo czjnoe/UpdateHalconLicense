@@ -1,4 +1,5 @@
 ﻿using Ookii.Dialogs.Wpf;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -26,7 +27,6 @@ namespace UpdateHalconLicense
         private readonly HttpClient httpClient;
         private DispatcherTimer autoUpdateTimer;
         private bool useProxy = true; // 是否使用代理
-        private WindowsServiceManager _serviceManager;
 
         public MainWindow()
         {
@@ -53,8 +53,6 @@ namespace UpdateHalconLicense
             LogMessage("程序启动成功");
             LogMessage($"GitHub 仓库: lovelyyoshino/Halcon_licenses");
             LogMessage($"可用代理节点: {proxyList.Count} 个");
-
-            LoadRegisterServiceState();
         }
 
         #region 配置管理
@@ -726,28 +724,15 @@ namespace UpdateHalconLicense
             }
         }
 
-        private void btnRegisterService_Click(object sender, RoutedEventArgs e)
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            var exePath = Environment.ProcessPath ??
-                                     System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var state = _serviceManager.InstallService(exePath);
-            btnRegisterService.IsEnabled = !state;
-            btnCancleRegisterService.IsEnabled = state;
-        }
-
-        private void btnCancleRegisterService_Click(object sender, RoutedEventArgs e)
-        {
-            var state = _serviceManager.UninstallService();
-            btnRegisterService.IsEnabled = state;
-            btnCancleRegisterService.IsEnabled = !state;
-        }
-
-        private void LoadRegisterServiceState()
-        {
-            _serviceManager = new WindowsServiceManager("UpdateHalconLicense.Service", "", "");
-            var state = _serviceManager.IsServiceInstalled();
-            btnRegisterService.IsEnabled = !state;
-            btnCancleRegisterService.IsEnabled = state;
+            // 在默认浏览器中打开链接
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = e.Uri.AbsoluteUri,
+                UseShellExecute = true
+            });
+            e.Handled = true;
         }
     }
 }
