@@ -1,21 +1,17 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using UpdateHalconLicense.Models;
 
 namespace UpdateHalconLicense.Helper
 {
     public static class AppConfigHelper
     {
-        private static IConfigurationRoot _configuration;
-        private static readonly string _appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-        public static Appsetting Appsetting;
+        private static readonly string _appSettingsPath = Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory,
+            "appsettings.json");
+
+        public static Appsetting Appsetting { get; private set; }
 
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
@@ -28,19 +24,21 @@ namespace UpdateHalconLicense.Helper
             LoadConfiguration();
         }
 
+        /// <summary>
+        /// 加载配置文件
+        /// </summary>
         private static void LoadConfiguration()
         {
-            _configuration = new ConfigurationBuilder()
-                .AddJsonFile(_appSettingsPath, optional: false, reloadOnChange: false)
-                .Build();
-
             try
             {
                 if (!File.Exists(_appSettingsPath))
                 {
                     Appsetting = default;
+                    return;
                 }
-                Appsetting = System.Text.Json.JsonSerializer.Deserialize<Appsetting>(File.ReadAllText(_appSettingsPath));
+
+                var jsonContent = File.ReadAllText(_appSettingsPath);
+                Appsetting = JsonSerializer.Deserialize<Appsetting>(jsonContent, _jsonOptions);
             }
             catch (Exception)
             {
@@ -48,13 +46,70 @@ namespace UpdateHalconLicense.Helper
             }
         }
 
-        public static T GetSetting<T>(string key)
+        /// <summary>
+        /// 根据键路径获取配置值
+        /// </summary>
+        /// <typeparam name="T">返回类型</typeparam>
+        /// <param name="keyPath">键路径，使用冒号分隔，例如 "Section:SubSection:Key"</param>
+        /// <returns>配置值</returns>
+        public static T GetSetting<T>(string keyPath)
         {
-            return _configuration.GetSection(key).Get<T>();
+            if (string.IsNullOrWhiteSpace(keyPath))
+            {
+                throw new ArgumentException("键路径不能为空", nameof(keyPath));
+            }
+
+            try
+            {
+                if (!File.Exists(_appSettingsPath))
+                {
+                    return default;
+                }
+
+                var jsonContent = File.ReadAllText(_appSettingsPath);
+                var jsonNode = JsonNode.Parse(jsonContent);
+
+                var pathSegments = keyPath.Split(':');
+                var currentNode = jsonNode;
+
+                // 遍历路径查找目标节点
+                foreach (var segment in pathSegments)
+                {
+                    if (currentNode == null)
+                    {
+                        return default;
+                    }
+
+                    currentNode = currentNode[segment];
+                }
+
+                if (currentNode == null)
+                {
+                    return default;
+                }
+
+                // 反序列化为目标类型
+                return JsonSerializer.Deserialize<T>(currentNode.ToJsonString(), _jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"获取配置失败: {ex.Message}", ex);
+            }
         }
 
+        /// <summary>
+        /// 更新指定键路径的配置值
+        /// </summary>
+        /// <typeparam name="T">值类型</typeparam>
+        /// <param name="keyPath">键路径，使用冒号分隔，例如 "Section:SubSection:Key"</param>
+        /// <param name="value">新值</param>
         public static void UpdateSetting<T>(string keyPath, T value)
         {
+            if (string.IsNullOrWhiteSpace(keyPath))
+            {
+                throw new ArgumentException("键路径不能为空", nameof(keyPath));
+            }
+
             try
             {
                 // 读取整个 JSON 文件
@@ -69,40 +124,67 @@ namespace UpdateHalconLicense.Helper
                 for (int i = 0; i < pathSegments.Length - 1; i++)
                 {
                     var segment = pathSegments[i];
-                    currentNode = currentNode[segment] ??= new JsonObject();
+
+                    // 如果节点不存在，创建新的 JsonObject
+                    if (currentNode[segment] == null)
+                    {
+                        currentNode[segment] = new JsonObject();
+                    }
+
+                    currentNode = currentNode[segment];
                 }
 
-                // 获取最后一个键名
+                // 获取最后一个键名并设置值
                 var finalKey = pathSegments[pathSegments.Length - 1];
-
-                // 设置最终值
                 currentNode[finalKey] = JsonValue.Create(value);
 
                 // 保存修改后的 JSON
                 File.WriteAllText(_appSettingsPath, jsonNode.ToJsonString(_jsonOptions));
+
+                // 重新加载配置
+                LoadConfiguration();
             }
             catch (Exception ex)
             {
-                // 实际应用中应记录错误
                 throw new InvalidOperationException($"更新配置失败: {ex.Message}", ex);
             }
-            LoadConfiguration();// 重新加载配置
         }
 
+        /// <summary>
+        /// 保存整个配置对象
+        /// </summary>
+        /// <typeparam name="T">配置对象类型</typeparam>
+        /// <param name="config">配置对象</param>
         public static void SaveSetting<T>(T config)
         {
             try
             {
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(config, options);
+                var json = JsonSerializer.Serialize(config, _jsonOptions);
                 File.WriteAllText(_appSettingsPath, json);
+
+                // 重新加载配置
+                LoadConfiguration();
             }
             catch (Exception ex)
             {
-                // 实际应用中应记录错误
-                throw new InvalidOperationException($"更新配置失败: {ex.Message}", ex);
+                throw new InvalidOperationException($"保存配置失败: {ex.Message}", ex);
             }
-            LoadConfiguration();// 重新加载配置
+        }
+
+        /// <summary>
+        /// 重新加载配置
+        /// </summary>
+        public static void Reload()
+        {
+            LoadConfiguration();
+        }
+
+        /// <summary>
+        /// 检查配置文件是否存在
+        /// </summary>
+        public static bool ConfigFileExists()
+        {
+            return File.Exists(_appSettingsPath);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Ookii.Dialogs.Wpf;
+﻿using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -169,45 +169,43 @@ namespace UpdateHalconLicense
 
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new VistaFolderBrowserDialog
+            var dialog = new OpenFolderDialog
             {
-                Description = "选择 Halcon 安装目录",
-                UseDescriptionForTitle = true,
-                ShowNewFolderButton = false
+                Title = "选择 Halcon 安装目录",
+                Multiselect = false,
             };
 
             if (!string.IsNullOrEmpty(txtHalconPath.Text) && Directory.Exists(txtHalconPath.Text))
             {
-                dialog.SelectedPath = txtHalconPath.Text;
+                dialog.InitialDirectory = txtHalconPath.Text;
             }
 
             if (dialog.ShowDialog() == true)
             {
-                txtHalconPath.Text = dialog.SelectedPath;
+                txtHalconPath.Text = dialog.FolderName;
                 SaveConfig();
-                LogMessage($"✓ Halcon 路径已设置: {dialog.SelectedPath}");
+                LogMessage($"✓ Halcon 路径已设置: {dialog.FolderName}");
             }
         }
 
         private void BtnBrowseDownload_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new VistaFolderBrowserDialog
+            var dialog = new OpenFolderDialog
             {
-                Description = "选择 License 下载保存目录",
-                UseDescriptionForTitle = true,
-                ShowNewFolderButton = true
+                Title = "选择 License 下载保存目录",
+                Multiselect = false
             };
 
             if (!string.IsNullOrEmpty(txtDownloadPath.Text) && Directory.Exists(txtDownloadPath.Text))
             {
-                dialog.SelectedPath = txtDownloadPath.Text;
+                dialog.InitialDirectory = txtDownloadPath.Text;
             }
 
             if (dialog.ShowDialog() == true)
             {
-                txtDownloadPath.Text = dialog.SelectedPath;
+                txtDownloadPath.Text = dialog.FolderName;
                 SaveConfig();
-                LogMessage($"✓ 下载路径已设置: {dialog.SelectedPath}");
+                LogMessage($"✓ 下载路径已设置: {dialog.FolderName}");
             }
         }
 
