@@ -26,7 +26,7 @@
             </Grid.RowDefinitions>
 
             <!-- Halcon安装目录设置 -->
-            <GroupBox Grid.Row="0" Header="Halcon 安装License目录" Margin="0,0,0,15">
+            <GroupBox Grid.Row="0" Header="Halcon 安装目录" Margin="0,0,0,15">
                 <StackPanel Margin="10">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -41,7 +41,7 @@
                         <Button x:Name="btnOpenHalconDirectory" Grid.Column="2" Content="定位" 
         Width="80" Padding="5" Click="BtnOpenHalconDirectory_Click"/>
                     </Grid>
-                    <TextBlock Text="例如: D:\Program Files\MVTec\HALCON-13.0\license" 
+                    <TextBlock Text="例如: D:\Program Files\MVTec\HALCON-13.0" 
                           Foreground="Gray" Margin="0,5,0,0" FontSize="12"/>
                 </StackPanel>
             </GroupBox>
